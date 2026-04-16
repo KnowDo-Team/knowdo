@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "nuxt build",
-    "dev": "nuxt dev",
+    "dev": "cross-env NODE_OPTIONS=--max-old-space-size=16384 nuxt dev",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
@@ -19,6 +19,7 @@
   },
   "devDependencies": {
     "@nuxt/eslint": "^1.15.2",
+    "cross-env": "^10.1.0",
     "eslint": "^10.2.0",
     "typescript": "^6.0.2",
     "vue-tsc": "^3.2.6"
