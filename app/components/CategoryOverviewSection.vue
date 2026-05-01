@@ -1,0 +1,352 @@
+<script setup lang="ts">
+export type CategoryTreeNode = {
+  id: string
+  slug: string
+  name: string
+  parentId: string | null
+}
+
+export type CategoryOverviewData = {
+  term: null
+  terms: CategoryTreeNode[]
+  children: {
+    id: string
+    slug: string
+    name: string
+  }[]
+  articles: {
+    id: string
+    slug: string
+    title: string
+  }[]
+}
+
+type TreeItem = {
+  label: string
+  value: string
+  path: string
+  children?: TreeItem[]
+}
+
+const props = withDefaults(defineProps<{
+  data?: CategoryOverviewData | null
+  status?: 'idle' | 'pending' | 'success' | 'error'
+  hasError?: boolean
+  compact?: boolean
+}>(), {
+  data: null,
+  status: 'success',
+  hasError: false,
+  compact: false
+})
+
+const { t } = useI18n()
+const router = useRouter()
+const colorMode = useColorMode()
+const isDark = computed(() => colorMode.value === 'dark')
+const expandedTreeKeys = ref<string[]>([])
+const treeChevronTogglePending = ref(false)
+
+const treeItems = computed<TreeItem[]>(() => {
+  const terms = props.data?.terms ?? []
+  const byParent = new Map<string | null, CategoryTreeNode[]>()
+
+  for (const term of terms) {
+    const parentId = term.parentId ?? null
+    const list = byParent.get(parentId) ?? []
+    list.push(term)
+    byParent.set(parentId, list)
+  }
+
+  const walk = (parentId: string | null, parentSegments: string[] = []): TreeItem[] => {
+    const children = (byParent.get(parentId) ?? [])
+      .slice()
+      .sort((a, b) => a.name.localeCompare(b.name))
+
+    return children.map((child) => {
+      const currentSegments = [...parentSegments, child.slug]
+      const descendants = walk(child.id, currentSegments)
+      return {
+        label: child.name,
+        value: child.id,
+        path: `/categories/${currentSegments.map(encodeURIComponent).join('/')}`,
+        ...(descendants.length ? { children: descendants } : {})
+      }
+    })
+  }
+
+  return walk(null)
+})
+
+const defaultExpandedTreeKeys = computed(() => {
+  const keys: string[] = []
+
+  const walk = (items: TreeItem[]) => {
+    for (const item of items) {
+      if (item.children?.length) {
+        keys.push(String(item.value))
+        walk(item.children)
+      }
+    }
+  }
+
+  walk(treeItems.value)
+  return keys
+})
+
+watch(treeItems, () => {
+  expandedTreeKeys.value = [...defaultExpandedTreeKeys.value]
+}, { immediate: true })
+
+function onTreeSelect(item: unknown) {
+  if (!item || typeof item !== 'object' || !('path' in item)) return
+
+  const path = (item as { path?: string }).path
+  if (!path) return
+  void router.push(path)
+}
+
+function onTreeExpandedUpdate(keys: string[]) {
+  if (!treeChevronTogglePending.value) return
+  expandedTreeKeys.value = keys
+  treeChevronTogglePending.value = false
+}
+
+function toggleTreeNode(handleToggle: () => void) {
+  treeChevronTogglePending.value = true
+  handleToggle()
+}
+</script>
+
+<template>
+  <section
+    class="category-overview"
+    :class="[
+      props.compact ? 'category-overview-compact' : 'category-overview-page',
+      props.compact && isDark ? 'category-overview-compact-dark' : 'category-overview-compact-light'
+    ]"
+  >
+    <div v-if="props.compact" class="category-overview-grid" />
+    <div v-if="props.compact" class="category-overview-glow category-overview-glow-left" />
+    <div v-if="props.compact" class="category-overview-glow category-overview-glow-right" />
+
+    <UContainer :class="props.compact ? 'py-14 sm:py-16' : 'py-10'">
+      <div class="relative z-1 space-y-6">
+        <div class="space-y-2">
+          <h2 :class="props.compact ? 'category-overview-title text-2xl sm:text-3xl font-bold' : 'text-3xl font-bold'">
+            {{ t('layout.categories') }}
+          </h2>
+          <p :class="props.compact ? 'category-overview-intro max-w-2xl text-sm sm:text-base' : 'max-w-2xl text-sm sm:text-base text-muted'">
+            {{ t('wiki.categories_intro') }}
+          </p>
+        </div>
+
+        <UAlert
+          v-if="props.hasError"
+          color="error"
+          :title="t('wiki.categories_load_failed')"
+        />
+        <div
+          v-else-if="props.status === 'pending'"
+          class="text-muted"
+        >
+          {{ t('common.loading') }}
+        </div>
+        <UCard
+          v-else
+          class="category-tree-card"
+          :class="props.compact ? 'category-tree-card-compact' : ''"
+          :ui="{ body: 'p-2 sm:p-2' }"
+        >
+          <UTree
+            :expanded="expandedTreeKeys"
+            :items="treeItems"
+            :get-key="item => String(item.value)"
+            @update:model-value="onTreeSelect"
+            @update:expanded="onTreeExpandedUpdate"
+          >
+            <template #item-wrapper="{ item, expanded, handleToggle }">
+              <div
+                :class="[
+                  'relative group w-full flex items-center text-sm select-none before:absolute before:inset-y-px before:inset-x-0 before:z-[-1] before:rounded-md',
+                  'focus:outline-none focus-visible:outline-none focus-visible:before:ring-inset focus-visible:before:ring-2 focus-visible:before:ring-primary',
+                  'px-2.5 py-1.5 gap-1.5 transition-colors before:transition-colors',
+                  props.compact
+                    ? 'category-tree-row-compact'
+                    : 'hover:text-highlighted hover:before:bg-elevated/50'
+                ]"
+                @click="onTreeSelect(item)"
+              >
+                <UIcon
+                  :name="item.children?.length ? (expanded ? 'i-lucide-folder-open' : 'i-lucide-folder') : 'i-lucide-folder'"
+                  :class="props.compact ? 'category-tree-icon-compact size-5 shrink-0 relative' : 'size-5 shrink-0 relative'"
+                />
+                <span
+                  :class="props.compact ? 'category-tree-label-compact truncate' : 'truncate'"
+                >
+                  {{ item.label }}
+                </span>
+                <span
+                  v-if="item.children?.length"
+                  class="ms-auto inline-flex gap-1.5 items-center"
+                >
+                  <button
+                    type="button"
+                    :class="props.compact ? 'inline-flex items-center justify-center category-tree-icon-compact hover:opacity-100 opacity-80' : 'inline-flex items-center justify-center text-(--ui-text-toned) hover:text-highlighted'"
+                    @click.stop="toggleTreeNode(handleToggle)"
+                  >
+                    <UIcon
+                      name="i-lucide-chevron-down"
+                      :class="[
+                        'size-5 shrink-0 transform transition-transform duration-200',
+                        expanded ? 'rotate-180' : ''
+                      ]"
+                    />
+                  </button>
+                </span>
+              </div>
+            </template>
+          </UTree>
+        </UCard>
+      </div>
+    </UContainer>
+  </section>
+</template>
+
+<style scoped>
+.category-overview {
+  position: relative;
+}
+
+.category-overview-compact {
+  border-top: 1px solid color-mix(in oklab, var(--ui-border) 75%, transparent);
+  overflow: hidden;
+}
+
+.category-overview-compact-light {
+  --category-overview-title: rgb(24 24 27 / 0.96);
+  --category-overview-intro: rgb(39 39 42 / 0.76);
+  --category-tree-label: rgb(24 24 27 / 0.94);
+  --category-tree-icon: rgb(82 82 91 / 0.72);
+  --category-tree-row-bg: rgb(24 24 27 / 0.04);
+  --category-tree-row-hover: rgb(24 24 27 / 0.07);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, white 92%, var(--ui-bg)) 0%,
+      color-mix(in oklab, #f4f4f5 88%, var(--ui-bg)) 100%
+    ),
+    color-mix(in oklab, #fafafa 94%, var(--ui-bg));
+}
+
+.category-overview-compact-dark {
+  --category-overview-title: rgb(255 255 255 / 0.98);
+  --category-overview-intro: rgb(255 255 255 / 0.72);
+  --category-tree-label: rgb(255 255 255 / 0.96);
+  --category-tree-icon: rgb(255 255 255 / 0.55);
+  --category-tree-row-bg: rgb(255 255 255 / 0.04);
+  --category-tree-row-hover: rgb(255 255 255 / 0.07);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, #0a0a0a 94%, var(--ui-bg)) 0%,
+      color-mix(in oklab, #171717 88%, var(--ui-bg)) 100%
+    ),
+    color-mix(in oklab, #111111 92%, var(--ui-bg));
+}
+
+.category-overview-page {
+  background: transparent;
+}
+
+.category-overview-title {
+  color: var(--category-overview-title);
+}
+
+.category-overview-intro {
+  color: var(--category-overview-intro);
+}
+
+.category-overview-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgb(24 24 27 / 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(24 24 27 / 0.05) 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: 0.48;
+  pointer-events: none;
+}
+
+.category-overview-compact-dark .category-overview-grid {
+  background-image:
+    linear-gradient(rgb(255 255 255 / 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.06) 1px, transparent 1px);
+}
+
+.category-overview-glow {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  pointer-events: none;
+}
+
+.category-overview-glow-left {
+  top: -100px;
+  left: -70px;
+  width: 260px;
+  height: 260px;
+  background: rgb(24 24 27 / 0.08);
+}
+
+.category-overview-glow-right {
+  right: -90px;
+  bottom: -120px;
+  width: 320px;
+  height: 320px;
+  background: rgb(24 24 27 / 0.05);
+}
+
+.category-overview-compact-dark .category-overview-glow-left {
+  background: rgb(255 255 255 / 0.08);
+}
+
+.category-overview-compact-dark .category-overview-glow-right {
+  background: rgb(255 255 255 / 0.05);
+}
+
+.category-tree-card {
+  border-radius: 1rem;
+}
+
+.category-tree-card-compact {
+  border-color: rgb(24 24 27 / 0.08);
+  background: rgb(255 255 255 / 0.52);
+  backdrop-filter: blur(8px);
+}
+
+.category-overview-compact-dark .category-tree-card-compact {
+  border-color: rgb(255 255 255 / 0.08);
+  background: rgb(255 255 255 / 0.04);
+}
+
+.category-tree-row-compact {
+  color: var(--category-tree-label);
+}
+
+.category-tree-row-compact::before {
+  background: transparent;
+}
+
+.category-tree-row-compact:hover::before {
+  background: var(--category-tree-row-hover);
+}
+
+.category-tree-label-compact {
+  color: var(--category-tree-label);
+}
+
+.category-tree-icon-compact {
+  color: var(--category-tree-icon);
+}
+</style>

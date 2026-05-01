@@ -8,21 +8,40 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
-    "typecheck": "nuxt typecheck"
+    "typecheck": "nuxt typecheck",
+    "db:push": "drizzle-kit push"
   },
   "dependencies": {
-    "@iconify-json/lucide": "^1.2.102",
-    "@iconify-json/simple-icons": "^1.2.78",
-    "@nuxt/ui": "^4.6.1",
-    "nuxt": "^4.4.2",
-    "tailwindcss": "^4.2.2"
+    "@iconify-json/lucide": "^1.2.105",
+    "@iconify-json/simple-icons": "^1.2.80",
+    "@libsql/client": "^0.17.3",
+    "@nuxt/ui": "^4.7.1",
+    "@nuxtjs/i18n": "^10.3.0",
+    "@tiptap/core": "^3.22.5",
+    "@tiptap/extension-image": "^3.22.5",
+    "@tiptap/extension-text-align": "^3.22.5",
+    "@tiptap/extension-text-style": "^3.22.5",
+    "@tiptap/extension-underline": "^3.22.5",
+    "@tiptap/pm": "^3.22.5",
+    "@tiptap/starter-kit": "^3.22.5",
+    "@tiptap/static-renderer": "^3.22.5",
+    "@tiptap/vue-3": "^3.22.5",
+    "busboy": "^1.6.0",
+    "drizzle-orm": "^0.45.2",
+    "isomorphic-dompurify": "^3.11.0",
+    "nuxt": "^4.4.4",
+    "tailwindcss": "^4.2.4",
+    "zod": "^4.4.1"
   },
   "devDependencies": {
     "@nuxt/eslint": "^1.15.2",
+    "@tailwindcss/typography": "^0.5.19",
+    "@types/busboy": "^1.5.4",
     "cross-env": "^10.1.0",
-    "eslint": "^10.2.0",
-    "typescript": "^6.0.2",
-    "vue-tsc": "^3.2.6"
+    "drizzle-kit": "^0.31.10",
+    "eslint": "^10.2.1",
+    "typescript": "^6.0.3",
+    "vue-tsc": "^3.2.7"
   },
   "packageManager": "pnpm@10.33.0"
 }
