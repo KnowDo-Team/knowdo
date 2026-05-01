@@ -25,6 +25,7 @@ type TreeItem = {
   label: string
   value: string
   path: string
+  depth: number
   children?: TreeItem[]
 }
 
@@ -58,18 +59,19 @@ const treeItems = computed<TreeItem[]>(() => {
     byParent.set(parentId, list)
   }
 
-  const walk = (parentId: string | null, parentSegments: string[] = []): TreeItem[] => {
+  const walk = (parentId: string | null, parentSegments: string[] = [], depth = 0): TreeItem[] => {
     const children = (byParent.get(parentId) ?? [])
       .slice()
       .sort((a, b) => a.name.localeCompare(b.name))
 
     return children.map((child) => {
       const currentSegments = [...parentSegments, child.slug]
-      const descendants = walk(child.id, currentSegments)
+      const descendants = walk(child.id, currentSegments, depth + 1)
       return {
         label: child.name,
         value: child.id,
         path: `/categories/${currentSegments.map(encodeURIComponent).join('/')}`,
+        depth,
         ...(descendants.length ? { children: descendants } : {})
       }
     })
@@ -115,6 +117,14 @@ function onTreeExpandedUpdate(keys: string[]) {
 function toggleTreeNode(handleToggle: () => void) {
   treeChevronTogglePending.value = true
   handleToggle()
+}
+
+function getCompactTreeDepthClass(item: TreeItem) {
+  if (item.depth <= 0) return 'category-tree-depth-0'
+  if (item.depth === 1) return 'category-tree-depth-1'
+  if (item.depth === 2) return 'category-tree-depth-2'
+  if (item.depth === 3) return 'category-tree-depth-3'
+  return 'category-tree-depth-4'
 }
 </script>
 
@@ -170,7 +180,7 @@ function toggleTreeNode(handleToggle: () => void) {
                   :class="[
                     'relative group w-full flex items-center text-base select-none before:absolute before:inset-y-px before:inset-x-0 before:z-[-1] before:rounded-md',
                     'focus:outline-none focus-visible:outline-none focus-visible:before:ring-inset focus-visible:before:ring-2 focus-visible:before:ring-primary',
-                    'px-3 py-2 gap-2 transition-colors before:transition-colors',
+                    'px-3 py-1.5 gap-1.5 transition-colors before:transition-colors',
                     props.compact
                       ? 'category-tree-row-compact'
                       : 'hover:text-highlighted hover:before:bg-elevated/50'
@@ -179,10 +189,10 @@ function toggleTreeNode(handleToggle: () => void) {
                 >
                   <UIcon
                     :name="item.children?.length ? (expanded ? 'i-lucide-folder-open' : 'i-lucide-folder') : 'i-lucide-folder'"
-                    :class="props.compact ? 'category-tree-icon-compact size-6 shrink-0 relative' : 'size-6 shrink-0 relative'"
+                    :class="props.compact ? ['category-tree-icon-compact', getCompactTreeDepthClass(item), 'size-5 shrink-0 relative'] : 'size-5 shrink-0 relative'"
                   />
                   <span
-                    :class="props.compact ? 'category-tree-label-compact truncate' : 'truncate'"
+                    :class="props.compact ? ['category-tree-label-compact', getCompactTreeDepthClass(item), 'truncate'] : 'truncate'"
                   >
                     {{ item.label }}
                   </span>
@@ -363,7 +373,7 @@ function toggleTreeNode(handleToggle: () => void) {
 .category-tree-row-compact {
   color: var(--category-tree-label);
   border-radius: 1rem;
-  min-height: 3rem;
+  min-height: 2.5rem;
 }
 
 .category-tree-row-compact::before {
@@ -384,5 +394,25 @@ function toggleTreeNode(handleToggle: () => void) {
 
 .category-tree-icon-compact {
   color: var(--category-tree-icon);
+}
+
+.category-tree-depth-0 {
+  font-size: 1.125rem;
+}
+
+.category-tree-depth-1 {
+  font-size: 1rem;
+}
+
+.category-tree-depth-2 {
+  font-size: 0.9375rem;
+}
+
+.category-tree-depth-3 {
+  font-size: 0.875rem;
+}
+
+.category-tree-depth-4 {
+  font-size: 0.8125rem;
 }
 </style>
