@@ -168,9 +168,9 @@ function toggleTreeNode(handleToggle: () => void) {
               <template #item-wrapper="{ item, expanded, handleToggle }">
                 <div
                   :class="[
-                    'relative group w-full flex items-center text-sm select-none before:absolute before:inset-y-px before:inset-x-0 before:z-[-1] before:rounded-md',
+                    'relative group w-full flex items-center text-base select-none before:absolute before:inset-y-px before:inset-x-0 before:z-[-1] before:rounded-md',
                     'focus:outline-none focus-visible:outline-none focus-visible:before:ring-inset focus-visible:before:ring-2 focus-visible:before:ring-primary',
-                    'px-2.5 py-1.5 gap-1.5 transition-colors before:transition-colors',
+                    'px-3 py-2 gap-2 transition-colors before:transition-colors',
                     props.compact
                       ? 'category-tree-row-compact'
                       : 'hover:text-highlighted hover:before:bg-elevated/50'
@@ -179,7 +179,7 @@ function toggleTreeNode(handleToggle: () => void) {
                 >
                   <UIcon
                     :name="item.children?.length ? (expanded ? 'i-lucide-folder-open' : 'i-lucide-folder') : 'i-lucide-folder'"
-                    :class="props.compact ? 'category-tree-icon-compact size-5 shrink-0 relative' : 'size-5 shrink-0 relative'"
+                    :class="props.compact ? 'category-tree-icon-compact size-6 shrink-0 relative' : 'size-6 shrink-0 relative'"
                   />
                   <span
                     :class="props.compact ? 'category-tree-label-compact truncate' : 'truncate'"
@@ -198,9 +198,9 @@ function toggleTreeNode(handleToggle: () => void) {
                       <UIcon
                         name="i-lucide-chevron-down"
                         :class="[
-                          'size-5 shrink-0 transform transition-transform duration-200',
-                          expanded ? 'rotate-180' : ''
-                        ]"
+                        'size-5 shrink-0 transform transition-transform duration-200',
+                        expanded ? 'rotate-180' : ''
+                      ]"
                       />
                     </button>
                   </span>
@@ -343,7 +343,7 @@ function toggleTreeNode(handleToggle: () => void) {
 }
 
 .category-tree-surface-inner {
-  padding: 0.9rem 1rem;
+  padding: 1.15rem 1.25rem;
 }
 
 .category-tree-surface-compact::before {
@@ -362,7 +362,8 @@ function toggleTreeNode(handleToggle: () => void) {
 
 .category-tree-row-compact {
   color: var(--category-tree-label);
-  border-radius: 0.9rem;
+  border-radius: 1rem;
+  min-height: 3rem;
 }
 
 .category-tree-row-compact::before {
@@ -377,6 +378,8 @@ function toggleTreeNode(handleToggle: () => void) {
 
 .category-tree-label-compact {
   color: var(--category-tree-label);
+  font-size: 1.0625rem;
+  line-height: 1.55;
 }
 
 .category-tree-icon-compact {
