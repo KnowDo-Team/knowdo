@@ -152,62 +152,63 @@ function toggleTreeNode(handleToggle: () => void) {
         >
           {{ t('common.loading') }}
         </div>
-        <UCard
+        <div
           v-else
-          class="category-tree-card"
-          :class="props.compact ? 'category-tree-card-compact' : ''"
-          :ui="{ body: 'p-2 sm:p-2' }"
+          class="category-tree-surface"
+          :class="props.compact ? 'category-tree-surface-compact' : ''"
         >
-          <UTree
-            :expanded="expandedTreeKeys"
-            :items="treeItems"
-            :get-key="item => String(item.value)"
-            @update:model-value="onTreeSelect"
-            @update:expanded="onTreeExpandedUpdate"
-          >
-            <template #item-wrapper="{ item, expanded, handleToggle }">
-              <div
-                :class="[
-                  'relative group w-full flex items-center text-sm select-none before:absolute before:inset-y-px before:inset-x-0 before:z-[-1] before:rounded-md',
-                  'focus:outline-none focus-visible:outline-none focus-visible:before:ring-inset focus-visible:before:ring-2 focus-visible:before:ring-primary',
-                  'px-2.5 py-1.5 gap-1.5 transition-colors before:transition-colors',
-                  props.compact
-                    ? 'category-tree-row-compact'
-                    : 'hover:text-highlighted hover:before:bg-elevated/50'
-                ]"
-                @click="onTreeSelect(item)"
-              >
-                <UIcon
-                  :name="item.children?.length ? (expanded ? 'i-lucide-folder-open' : 'i-lucide-folder') : 'i-lucide-folder'"
-                  :class="props.compact ? 'category-tree-icon-compact size-5 shrink-0 relative' : 'size-5 shrink-0 relative'"
-                />
-                <span
-                  :class="props.compact ? 'category-tree-label-compact truncate' : 'truncate'"
+          <div class="category-tree-surface-inner">
+            <UTree
+              :expanded="expandedTreeKeys"
+              :items="treeItems"
+              :get-key="item => String(item.value)"
+              @update:model-value="onTreeSelect"
+              @update:expanded="onTreeExpandedUpdate"
+            >
+              <template #item-wrapper="{ item, expanded, handleToggle }">
+                <div
+                  :class="[
+                    'relative group w-full flex items-center text-sm select-none before:absolute before:inset-y-px before:inset-x-0 before:z-[-1] before:rounded-md',
+                    'focus:outline-none focus-visible:outline-none focus-visible:before:ring-inset focus-visible:before:ring-2 focus-visible:before:ring-primary',
+                    'px-2.5 py-1.5 gap-1.5 transition-colors before:transition-colors',
+                    props.compact
+                      ? 'category-tree-row-compact'
+                      : 'hover:text-highlighted hover:before:bg-elevated/50'
+                  ]"
+                  @click="onTreeSelect(item)"
                 >
-                  {{ item.label }}
-                </span>
-                <span
-                  v-if="item.children?.length"
-                  class="ms-auto inline-flex gap-1.5 items-center"
-                >
-                  <button
-                    type="button"
-                    :class="props.compact ? 'inline-flex items-center justify-center category-tree-icon-compact hover:opacity-100 opacity-80' : 'inline-flex items-center justify-center text-(--ui-text-toned) hover:text-highlighted'"
-                    @click.stop="toggleTreeNode(handleToggle)"
+                  <UIcon
+                    :name="item.children?.length ? (expanded ? 'i-lucide-folder-open' : 'i-lucide-folder') : 'i-lucide-folder'"
+                    :class="props.compact ? 'category-tree-icon-compact size-5 shrink-0 relative' : 'size-5 shrink-0 relative'"
+                  />
+                  <span
+                    :class="props.compact ? 'category-tree-label-compact truncate' : 'truncate'"
                   >
-                    <UIcon
-                      name="i-lucide-chevron-down"
-                      :class="[
-                        'size-5 shrink-0 transform transition-transform duration-200',
-                        expanded ? 'rotate-180' : ''
-                      ]"
-                    />
-                  </button>
-                </span>
-              </div>
-            </template>
-          </UTree>
-        </UCard>
+                    {{ item.label }}
+                  </span>
+                  <span
+                    v-if="item.children?.length"
+                    class="ms-auto inline-flex gap-1.5 items-center"
+                  >
+                    <button
+                      type="button"
+                      :class="props.compact ? 'inline-flex items-center justify-center category-tree-icon-compact hover:opacity-100 opacity-80' : 'inline-flex items-center justify-center text-(--ui-text-toned) hover:text-highlighted'"
+                      @click.stop="toggleTreeNode(handleToggle)"
+                    >
+                      <UIcon
+                        name="i-lucide-chevron-down"
+                        :class="[
+                          'size-5 shrink-0 transform transition-transform duration-200',
+                          expanded ? 'rotate-180' : ''
+                        ]"
+                      />
+                    </button>
+                  </span>
+                </div>
+              </template>
+            </UTree>
+          </div>
+        </div>
       </div>
     </UContainer>
   </section>
@@ -228,8 +229,12 @@ function toggleTreeNode(handleToggle: () => void) {
   --category-overview-intro: rgb(39 39 42 / 0.76);
   --category-tree-label: rgb(24 24 27 / 0.94);
   --category-tree-icon: rgb(82 82 91 / 0.72);
-  --category-tree-row-bg: rgb(24 24 27 / 0.04);
-  --category-tree-row-hover: rgb(24 24 27 / 0.07);
+  --category-tree-row-bg: rgb(255 255 255 / 0.42);
+  --category-tree-row-hover: rgb(255 255 255 / 0.78);
+  --category-tree-surface-bg: color-mix(in oklab, #f8f8f7 46%, transparent);
+  --category-tree-surface-border: rgb(24 24 27 / 0.055);
+  --category-tree-surface-shadow: inset 0 1px 0 rgb(255 255 255 / 0.2);
+  --category-tree-surface-grid: rgb(24 24 27 / 0.03);
   background:
     linear-gradient(
       180deg,
@@ -244,8 +249,12 @@ function toggleTreeNode(handleToggle: () => void) {
   --category-overview-intro: rgb(255 255 255 / 0.72);
   --category-tree-label: rgb(255 255 255 / 0.96);
   --category-tree-icon: rgb(255 255 255 / 0.55);
-  --category-tree-row-bg: rgb(255 255 255 / 0.04);
-  --category-tree-row-hover: rgb(255 255 255 / 0.07);
+  --category-tree-row-bg: rgb(255 255 255 / 0.03);
+  --category-tree-row-hover: rgb(255 255 255 / 0.08);
+  --category-tree-surface-bg: color-mix(in oklab, #151515 34%, transparent);
+  --category-tree-surface-border: rgb(255 255 255 / 0.06);
+  --category-tree-surface-shadow: inset 0 1px 0 rgb(255 255 255 / 0.045);
+  --category-tree-surface-grid: rgb(255 255 255 / 0.035);
   background:
     linear-gradient(
       180deg,
@@ -315,31 +324,55 @@ function toggleTreeNode(handleToggle: () => void) {
   background: rgb(255 255 255 / 0.05);
 }
 
-.category-tree-card {
-  border-radius: 1rem;
+.category-tree-surface {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.5rem;
 }
 
-.category-tree-card-compact {
-  border-color: rgb(24 24 27 / 0.08);
-  background: rgb(255 255 255 / 0.52);
-  backdrop-filter: blur(8px);
+.category-tree-surface-compact {
+  border: 1px solid var(--category-tree-surface-border);
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.08), transparent 34%),
+    linear-gradient(var(--category-tree-surface-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--category-tree-surface-grid) 1px, transparent 1px),
+    var(--category-tree-surface-bg);
+  background-size: auto, 26px 26px, 26px 26px, auto;
+  box-shadow: var(--category-tree-surface-shadow);
+  backdrop-filter: blur(3px);
 }
 
-.category-overview-compact-dark .category-tree-card-compact {
-  border-color: rgb(255 255 255 / 0.08);
-  background: rgb(255 255 255 / 0.04);
+.category-tree-surface-inner {
+  padding: 0.9rem 1rem;
+}
+
+.category-tree-surface-compact::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.08), transparent 26%);
+}
+
+.category-overview-compact-dark .category-tree-surface-compact::before {
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.04), transparent 24%);
 }
 
 .category-tree-row-compact {
   color: var(--category-tree-label);
+  border-radius: 0.9rem;
 }
 
 .category-tree-row-compact::before {
-  background: transparent;
+  background: var(--category-tree-row-bg);
+  opacity: 0.52;
 }
 
 .category-tree-row-compact:hover::before {
   background: var(--category-tree-row-hover);
+  opacity: 1;
 }
 
 .category-tree-label-compact {
