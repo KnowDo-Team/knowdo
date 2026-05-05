@@ -43,8 +43,6 @@ const props = withDefaults(defineProps<{
 
 const { t } = useI18n()
 const router = useRouter()
-const colorMode = useColorMode()
-const isDark = computed(() => colorMode.value === 'dark')
 const expandedTreeKeys = ref<string[]>([])
 const treeChevronTogglePending = ref(false)
 
@@ -131,14 +129,20 @@ function getCompactTreeDepthClass(item: TreeItem) {
 <template>
   <section
     class="category-overview"
-    :class="[
-      props.compact ? 'category-overview-compact' : 'category-overview-page',
-      props.compact && isDark ? 'category-overview-compact-dark' : 'category-overview-compact-light'
-    ]"
+    :class="props.compact ? 'category-overview-compact' : 'category-overview-page'"
   >
-    <div v-if="props.compact" class="category-overview-grid" />
-    <div v-if="props.compact" class="category-overview-glow category-overview-glow-left" />
-    <div v-if="props.compact" class="category-overview-glow category-overview-glow-right" />
+    <div
+      v-if="props.compact"
+      class="category-overview-grid"
+    />
+    <div
+      v-if="props.compact"
+      class="category-overview-glow category-overview-glow-left"
+    />
+    <div
+      v-if="props.compact"
+      class="category-overview-glow category-overview-glow-right"
+    />
 
     <UContainer :class="props.compact ? 'py-14 sm:py-16' : 'py-10'">
       <div class="relative z-1 space-y-6">
@@ -202,15 +206,15 @@ function getCompactTreeDepthClass(item: TreeItem) {
                   >
                     <button
                       type="button"
-                      :class="props.compact ? 'inline-flex items-center justify-center category-tree-icon-compact hover:opacity-100 opacity-80' : 'inline-flex items-center justify-center text-(--ui-text-toned) hover:text-highlighted'"
+                      :class="props.compact ? 'inline-flex items-center justify-center category-tree-icon-compact hover:opacity-100 opacity-80' : 'inline-flex items-center justify-center text-toned hover:text-highlighted'"
                       @click.stop="toggleTreeNode(handleToggle)"
                     >
                       <UIcon
                         name="i-lucide-chevron-down"
                         :class="[
-                        'size-5 shrink-0 transform transition-transform duration-200',
-                        expanded ? 'rotate-180' : ''
-                      ]"
+                          'size-5 shrink-0 transform transition-transform duration-200',
+                          expanded ? 'rotate-180' : ''
+                        ]"
                       />
                     </button>
                   </span>
@@ -230,11 +234,6 @@ function getCompactTreeDepthClass(item: TreeItem) {
 }
 
 .category-overview-compact {
-  border-top: 1px solid color-mix(in oklab, var(--ui-border) 75%, transparent);
-  overflow: hidden;
-}
-
-.category-overview-compact-light {
   --category-overview-title: rgb(24 24 27 / 0.96);
   --category-overview-intro: rgb(39 39 42 / 0.76);
   --category-tree-label: rgb(24 24 27 / 0.94);
@@ -245,6 +244,12 @@ function getCompactTreeDepthClass(item: TreeItem) {
   --category-tree-surface-border: rgb(24 24 27 / 0.055);
   --category-tree-surface-shadow: inset 0 1px 0 rgb(255 255 255 / 0.2);
   --category-tree-surface-grid: rgb(24 24 27 / 0.03);
+  --category-tree-surface-highlight: rgb(255 255 255 / 0.08);
+  --category-tree-surface-overlay: rgb(255 255 255 / 0.08);
+  --category-overview-grid-line: rgb(24 24 27 / 0.05);
+  --category-overview-grid-opacity: 0.48;
+  border-top: 1px solid color-mix(in oklab, var(--ui-border) 75%, transparent);
+  overflow: hidden;
   background:
     linear-gradient(
       180deg,
@@ -252,26 +257,6 @@ function getCompactTreeDepthClass(item: TreeItem) {
       color-mix(in oklab, #f4f4f5 88%, var(--ui-bg)) 100%
     ),
     color-mix(in oklab, #fafafa 94%, var(--ui-bg));
-}
-
-.category-overview-compact-dark {
-  --category-overview-title: rgb(255 255 255 / 0.98);
-  --category-overview-intro: rgb(255 255 255 / 0.72);
-  --category-tree-label: rgb(255 255 255 / 0.96);
-  --category-tree-icon: rgb(255 255 255 / 0.55);
-  --category-tree-row-bg: rgb(255 255 255 / 0.03);
-  --category-tree-row-hover: rgb(255 255 255 / 0.08);
-  --category-tree-surface-bg: color-mix(in oklab, #151515 34%, transparent);
-  --category-tree-surface-border: rgb(255 255 255 / 0.06);
-  --category-tree-surface-shadow: inset 0 1px 0 rgb(255 255 255 / 0.045);
-  --category-tree-surface-grid: rgb(255 255 255 / 0.035);
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in oklab, #0a0a0a 94%, var(--ui-bg)) 0%,
-      color-mix(in oklab, #171717 88%, var(--ui-bg)) 100%
-    ),
-    color-mix(in oklab, #111111 92%, var(--ui-bg));
 }
 
 .category-overview-page {
@@ -290,17 +275,11 @@ function getCompactTreeDepthClass(item: TreeItem) {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgb(24 24 27 / 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(24 24 27 / 0.05) 1px, transparent 1px);
+    linear-gradient(var(--category-overview-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--category-overview-grid-line) 1px, transparent 1px);
   background-size: 28px 28px;
-  opacity: 0.48;
+  opacity: var(--category-overview-grid-opacity);
   pointer-events: none;
-}
-
-.category-overview-compact-dark .category-overview-grid {
-  background-image:
-    linear-gradient(rgb(255 255 255 / 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(255 255 255 / 0.06) 1px, transparent 1px);
 }
 
 .category-overview-glow {
@@ -326,14 +305,6 @@ function getCompactTreeDepthClass(item: TreeItem) {
   background: rgb(24 24 27 / 0.05);
 }
 
-.category-overview-compact-dark .category-overview-glow-left {
-  background: rgb(255 255 255 / 0.08);
-}
-
-.category-overview-compact-dark .category-overview-glow-right {
-  background: rgb(255 255 255 / 0.05);
-}
-
 .category-tree-surface {
   position: relative;
   overflow: hidden;
@@ -343,7 +314,7 @@ function getCompactTreeDepthClass(item: TreeItem) {
 .category-tree-surface-compact {
   border: 1px solid var(--category-tree-surface-border);
   background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.08), transparent 34%),
+    linear-gradient(180deg, var(--category-tree-surface-highlight), transparent 42%),
     linear-gradient(var(--category-tree-surface-grid) 1px, transparent 1px),
     linear-gradient(90deg, var(--category-tree-surface-grid) 1px, transparent 1px),
     var(--category-tree-surface-bg);
@@ -362,12 +333,7 @@ function getCompactTreeDepthClass(item: TreeItem) {
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.08), transparent 26%);
-}
-
-.category-overview-compact-dark .category-tree-surface-compact::before {
-  background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.04), transparent 24%);
+    linear-gradient(180deg, var(--category-tree-surface-overlay), transparent 24%);
 }
 
 .category-tree-row-compact {
@@ -414,5 +380,45 @@ function getCompactTreeDepthClass(item: TreeItem) {
 
 .category-tree-depth-4 {
   font-size: 0.8125rem;
+}
+</style>
+
+<style>
+.dark .category-overview-compact {
+  --category-overview-title: rgb(255 255 255 / 0.96);
+  --category-overview-intro: rgb(212 212 216 / 0.78);
+  --category-tree-label: rgb(244 244 245 / 0.92);
+  --category-tree-icon: rgb(212 212 216 / 0.62);
+  --category-tree-row-bg: transparent;
+  --category-tree-row-hover: rgb(255 255 255 / 0.055);
+  --category-tree-surface-bg: rgb(18 18 20 / 0.72);
+  --category-tree-surface-border: rgb(255 255 255 / 0.075);
+  --category-tree-surface-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.045),
+    0 20px 60px rgb(0 0 0 / 0.24);
+  --category-tree-surface-grid: rgb(255 255 255 / 0.018);
+  --category-tree-surface-highlight: rgb(255 255 255 / 0.022);
+  --category-tree-surface-overlay: rgb(255 255 255 / 0.016);
+  --category-overview-grid-line: rgb(255 255 255 / 0.032);
+  --category-overview-grid-opacity: 0.3;
+  background:
+    radial-gradient(
+      620px circle at 50% 0%,
+      rgb(255 255 255 / 0.045),
+      transparent 58%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--ui-bg-elevated) 18%, var(--ui-bg)) 0%,
+      var(--ui-bg) 78%
+    );
+}
+
+.dark .category-overview-compact .category-overview-glow-left {
+  background: rgb(255 255 255 / 0.035);
+}
+
+.dark .category-overview-compact .category-overview-glow-right {
+  background: rgb(255 255 255 / 0.025);
 }
 </style>
