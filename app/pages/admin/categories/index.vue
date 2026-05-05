@@ -16,8 +16,17 @@ type CategoryTreeItem = {
   children?: CategoryTreeItem[]
 }
 
+type DeleteArticleAction = 'detach' | 'delete'
+
+const errorMessageKeys: Record<string, string> = {
+  'Not found': 'admin.error_not_found',
+  'delete_children_first': 'admin.error_delete_children_first',
+  'slug_conflict_same_parent': 'admin.error_slug_conflict_same_parent',
+  'invalid slug or name': 'admin.error_invalid_slug_or_name',
+  'slug and name required': 'admin.error_slug_and_name_required'
+}
+
 const { t } = useI18n()
-const modal = useAppModal()
 const toast = useToast()
 const { data, refresh } = await useFetch('/api/admin/terms', { lazy: true })
 
@@ -47,13 +56,23 @@ const pendingEditParentId = ref<string>('')
 const expandedEditParentTreeKeys = ref<string[]>([])
 const editParentChevronTogglePending = ref(false)
 
+const showDelete = ref(false)
+const deleting = ref(false)
+const deleteCategoryId = ref<string | null>(null)
+const deleteArticleAction = ref<DeleteArticleAction>('detach')
+
 const totalLabel = computed(() => t('admin.categories_total', { count: visibleCategoryCount.value }))
 
 function getErrorMessage(error: unknown, fallback = '') {
   if (error && typeof error === 'object') {
     const maybeData = 'data' in error ? (error as { data?: { statusMessage?: string } }).data : undefined
     const maybeMessage = 'message' in error ? (error as { message?: string }).message : ''
-    return maybeData?.statusMessage || maybeMessage || fallback
+    const rawMessage = maybeData?.statusMessage || maybeMessage || ''
+    const messageKey = errorMessageKeys[rawMessage]
+      || errorMessageKeys[rawMessage.trim().toLowerCase().replace(/\s+/g, '_')]
+
+    if (messageKey) return t(messageKey)
+    return rawMessage || fallback
   }
   return fallback
 }
@@ -69,6 +88,48 @@ const categoryById = computed(() => {
 const selectedCategory = computed(() => {
   if (!selectedCategoryId.value) return null
   return categoryById.value.get(selectedCategoryId.value) ?? null
+})
+
+const deleteCategory = computed(() => {
+  if (!deleteCategoryId.value) return null
+  return categoryById.value.get(deleteCategoryId.value) ?? null
+})
+
+const deleteArticleActionItems = computed(() => [
+  {
+    label: t('admin.categories_delete_article_action_detach'),
+    description: t('admin.categories_delete_article_action_detach_description'),
+    value: 'detach' as const
+  },
+  {
+    label: t('admin.categories_delete_article_action_delete'),
+    description: t('admin.categories_delete_article_action_delete_description'),
+    value: 'delete' as const
+  }
+])
+
+const deleteCategoryIds = computed(() => {
+  const rootId = deleteCategoryId.value
+  if (!rootId) return []
+
+  const childrenByParent = new Map<string | null, TermRow[]>()
+  for (const term of terms.value) {
+    const parentId = term.parentId ?? null
+    const list = childrenByParent.get(parentId) ?? []
+    list.push(term)
+    childrenByParent.set(parentId, list)
+  }
+
+  const ids: string[] = []
+  const walk = (parentId: string) => {
+    ids.push(parentId)
+    for (const child of childrenByParent.get(parentId) ?? []) {
+      walk(child.id)
+    }
+  }
+
+  walk(rootId)
+  return ids
 })
 
 const childCountById = computed(() => {
@@ -416,22 +477,60 @@ async function updateTerm() {
   }
 }
 
-async function deleteTerm(id: string) {
-  const confirmed = await modal.confirm({
-    tone: 'error',
-    title: t('common.confirm'),
-    description: t('admin.categories_delete_confirm'),
-    confirmLabel: t('common.delete'),
-    cancelLabel: t('common.cancel')
-  })
-  if (!confirmed) return
+type DeleteCategoryResponse = {
+  deletedTerms: number
+  affectedArticles: number
+  deletedArticles: number
+}
 
+function openDeleteTerm(id: string) {
+  deleteCategoryId.value = id
+  deleteArticleAction.value = 'detach'
+  showDelete.value = true
+}
+
+function closeDeleteTerm() {
+  if (deleting.value) return
+  showDelete.value = false
+  deleteCategoryId.value = null
+  deleteArticleAction.value = 'detach'
+}
+
+async function confirmDeleteTerm() {
+  const id = deleteCategoryId.value
+  if (!id) return
+
+  const deletedIds = [...deleteCategoryIds.value]
+  deleting.value = true
   try {
-    await $fetch(`/api/admin/terms/${id}`, { method: 'DELETE' })
+    const result = await $fetch<DeleteCategoryResponse>(`/api/admin/terms/${id}`, {
+      method: 'DELETE',
+      body: {
+        articleAction: deleteArticleAction.value
+      }
+    })
+
+    if (selectedCategoryId.value && deletedIds.includes(selectedCategoryId.value)) {
+      selectedCategoryId.value = null
+    }
+
+    showDelete.value = false
+    deleteCategoryId.value = null
     await refresh()
 
     toast.add({
       title: t('common.deleted'),
+      description: t(
+        deleteArticleAction.value === 'delete'
+          ? 'admin.categories_deleted_summary_delete'
+          : 'admin.categories_deleted_summary_detach',
+        {
+          categories: result.deletedTerms,
+          articles: deleteArticleAction.value === 'delete'
+            ? result.deletedArticles
+            : result.affectedArticles
+        }
+      ),
       color: 'success'
     })
   } catch (e: unknown) {
@@ -440,6 +539,8 @@ async function deleteTerm(id: string) {
       description: getErrorMessage(e),
       color: 'error'
     })
+  } finally {
+    deleting.value = false
   }
 }
 </script>
@@ -451,7 +552,7 @@ async function deleteTerm(id: string) {
         <h2 class="text-3xl font-bold tracking-tight">
           {{ t('admin.categories_title') }}
         </h2>
-        <p class="text-(--ui-text-muted)">
+        <p class="text-muted">
           {{ t('admin.categories_subtitle') }}
         </p>
       </div>
@@ -471,7 +572,7 @@ async function deleteTerm(id: string) {
         icon="i-lucide-search"
         :placeholder="t('admin.categories_col_category')"
       />
-      <p class="text-xs text-(--ui-text-muted)">
+      <p class="text-xs text-muted">
         {{ totalLabel }}
       </p>
     </div>
@@ -520,7 +621,7 @@ async function deleteTerm(id: string) {
               >
                 <button
                   type="button"
-                  class="inline-flex items-center justify-center text-(--ui-text-toned) hover:text-highlighted"
+                  class="inline-flex items-center justify-center text-toned hover:text-highlighted"
                   @click.stop="toggleCategoryTreeNode(handleToggle)"
                 >
                   <UIcon
@@ -555,29 +656,29 @@ async function deleteTerm(id: string) {
           class="space-y-4"
         >
           <div>
-            <div class="text-base font-semibold text-(--ui-text-highlighted)">
+            <div class="text-base font-semibold text-highlighted">
               {{ selectedCategory.name }}
             </div>
-            <div class="font-mono text-xs text-(--ui-text-muted)">
+            <div class="font-mono text-xs text-muted">
               {{ selectedCategory.slug }}
             </div>
           </div>
 
-          <div class="text-sm text-(--ui-text-muted)">
+          <div class="text-sm text-muted">
             {{ t('admin.categories_parent_meta') }}:
             {{ selectedCategory.parentId ? (categoryById.get(selectedCategory.parentId)?.name || selectedCategory.parentId) : t('admin.categories_parent_root') }}
           </div>
-          <div class="text-sm text-(--ui-text-muted)">
+          <div class="text-sm text-muted">
             {{ t('admin.categories_child_count') }}: {{ childCountById.get(selectedCategory.id) ?? 0 }}
           </div>
 
           <div class="flex flex-wrap gap-1">
-            <span class="rounded border border-(--ui-border) bg-(--ui-bg-elevated) px-2 py-0.5 text-xs">
+            <span class="rounded border border-default bg-elevated px-2 py-0.5 text-xs">
               {{ `/${selectedCategory.slug}` }}
             </span>
           </div>
 
-          <div class="flex justify-end gap-2 border-t border-(--ui-border) pt-3">
+          <div class="flex justify-end gap-2 border-t border-default pt-3">
             <UButton
               color="neutral"
               variant="outline"
@@ -588,7 +689,7 @@ async function deleteTerm(id: string) {
             <UButton
               color="error"
               variant="outline"
-              @click="deleteTerm(selectedCategory.id)"
+              @click="openDeleteTerm(selectedCategory.id)"
             >
               {{ t('admin.categories_action_delete') }}
             </UButton>
@@ -614,7 +715,7 @@ async function deleteTerm(id: string) {
                 {{ createParentDisplayLabel }}
               </UButton>
               <template #content>
-                <div class="w-[var(--reka-popper-anchor-width)] space-y-2 p-2">
+                <div class="w-(--reka-popper-anchor-width) space-y-2 p-2">
                   <div class="max-h-72 overflow-y-auto">
                     <UTree
                       :expanded="expandedCreateParentTreeKeys"
@@ -646,7 +747,7 @@ async function deleteTerm(id: string) {
                           >
                             <button
                               type="button"
-                              class="inline-flex items-center justify-center text-(--ui-text-toned) hover:text-highlighted"
+                              class="inline-flex items-center justify-center text-toned hover:text-highlighted"
                               @click.stop="toggleCreateParentTreeNode(handleToggle)"
                             >
                               <UIcon
@@ -662,7 +763,7 @@ async function deleteTerm(id: string) {
                       </template>
                     </UTree>
                   </div>
-                  <div class="flex justify-end gap-2 border-t border-(--ui-border) pt-2">
+                  <div class="flex justify-end gap-2 border-t border-default pt-2">
                     <UButton
                       color="neutral"
                       variant="ghost"
@@ -737,7 +838,7 @@ async function deleteTerm(id: string) {
                 {{ editParentDisplayLabel }}
               </UButton>
               <template #content>
-                <div class="w-[var(--reka-popper-anchor-width)] space-y-2 p-2">
+                <div class="w-(--reka-popper-anchor-width) space-y-2 p-2">
                   <div class="max-h-72 overflow-y-auto">
                     <UTree
                       :expanded="expandedEditParentTreeKeys"
@@ -769,7 +870,7 @@ async function deleteTerm(id: string) {
                           >
                             <button
                               type="button"
-                              class="inline-flex items-center justify-center text-(--ui-text-toned) hover:text-highlighted"
+                              class="inline-flex items-center justify-center text-toned hover:text-highlighted"
                               @click.stop="toggleEditParentTreeNode(handleToggle)"
                             >
                               <UIcon
@@ -785,7 +886,7 @@ async function deleteTerm(id: string) {
                       </template>
                     </UTree>
                   </div>
-                  <div class="flex justify-end gap-2 border-t border-(--ui-border) pt-2">
+                  <div class="flex justify-end gap-2 border-t border-default pt-2">
                     <UButton
                       color="neutral"
                       variant="ghost"
@@ -837,6 +938,59 @@ async function deleteTerm(id: string) {
               @click="updateTerm"
             >
               {{ t('common.save') }}
+            </UButton>
+          </div>
+        </div>
+      </template>
+    </UModal>
+
+    <UModal
+      v-model:open="showDelete"
+      :dismissible="!deleting"
+      :ui="{ content: 'sm:max-w-lg' }"
+      @update:open="open => !open && closeDeleteTerm()"
+    >
+      <template #content>
+        <div class="space-y-5 p-6">
+          <div class="flex items-start gap-4">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/12 text-red-500">
+              <UIcon
+                name="i-lucide-triangle-alert"
+                class="h-5 w-5"
+              />
+            </div>
+            <div class="min-w-0 flex-1">
+              <h2 class="text-lg font-semibold text-highlighted">
+                {{ t('admin.categories_delete_title') }}
+              </h2>
+              <p class="mt-2 text-sm leading-6 text-muted">
+                {{ t('admin.categories_delete_confirm', { name: deleteCategory?.name || '', count: deleteCategoryIds.length }) }}
+              </p>
+            </div>
+          </div>
+
+          <URadioGroup
+            v-model="deleteArticleAction"
+            :items="deleteArticleActionItems"
+            variant="card"
+            color="error"
+          />
+
+          <div class="flex justify-end gap-3">
+            <UButton
+              color="neutral"
+              variant="ghost"
+              :disabled="deleting"
+              @click="closeDeleteTerm"
+            >
+              {{ t('common.cancel') }}
+            </UButton>
+            <UButton
+              color="error"
+              :loading="deleting"
+              @click="confirmDeleteTerm"
+            >
+              {{ t('common.delete') }}
             </UButton>
           </div>
         </div>

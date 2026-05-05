@@ -116,8 +116,8 @@ async function save() {
 async function remove() {
   const confirmed = await modal.confirm({
     tone: 'error',
-    title: t('common.confirm'),
-    description: t('admin.delete_article_confirm'),
+    title: t('admin.delete_article_title'),
+    description: t('admin.delete_article_confirm', { title: title.value || slug.value }),
     confirmLabel: t('common.delete'),
     cancelLabel: t('common.cancel')
   })

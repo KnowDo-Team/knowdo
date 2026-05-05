@@ -22,6 +22,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const rootCategoryValue = '__root__'
 
 const categoryPickerOpen = ref(false)
 const pendingCategoryIds = ref<string[]>([])
@@ -60,7 +61,13 @@ const categoryTreeItems = computed<CategoryTreeItem[]>(() => {
     })
   }
 
-  return build(null)
+  return [
+    {
+      label: t('admin.categories_root_option'),
+      value: rootCategoryValue,
+      children: build(null)
+    }
+  ]
 })
 
 const defaultExpandedCategoryTreeKeys = computed(() => {
@@ -82,7 +89,7 @@ const defaultExpandedCategoryTreeKeys = computed(() => {
 const pendingCategoryIdSet = computed(() => new Set(pendingCategoryIds.value))
 
 const categoryDisplayLabel = computed(() => {
-  if (props.modelValue.length === 0) return t('admin.select_categories_placeholder')
+  if (props.modelValue.length === 0) return t('admin.categories_root_option')
   return props.modelValue
     .map(id => categoryNameById.value.get(id))
     .filter((name): name is string => Boolean(name))
@@ -100,8 +107,19 @@ function toggleCategoryTreeNode(handleToggle: () => void) {
   handleToggle()
 }
 
+function isCategoryItemSelected(item: CategoryTreeItem) {
+  return item.value === rootCategoryValue
+    ? pendingCategoryIds.value.length === 0
+    : pendingCategoryIdSet.value.has(item.value)
+}
+
 function togglePendingCategorySelection(item: CategoryTreeItem) {
   const id = String(item.value)
+  if (id === rootCategoryValue) {
+    pendingCategoryIds.value = []
+    return
+  }
+
   const next = new Set(pendingCategoryIds.value)
   if (next.has(id)) next.delete(id)
   else next.add(id)
@@ -134,7 +152,7 @@ watch(categoryPickerOpen, (open) => {
       <span class="truncate">{{ categoryDisplayLabel }}</span>
     </UButton>
     <template #content>
-      <div class="w-[var(--reka-popper-anchor-width)] space-y-2 p-2">
+      <div class="w-(--reka-popper-anchor-width) space-y-2 p-2">
         <div class="max-h-72 overflow-y-auto">
           <UTree
             :expanded="expandedCategoryTreeKeys"
@@ -148,7 +166,7 @@ watch(categoryPickerOpen, (open) => {
                   'relative group w-full flex items-center text-sm select-none before:absolute before:inset-y-px before:inset-x-0 before:z-[-1] before:rounded-md',
                   'focus:outline-none focus-visible:outline-none focus-visible:before:ring-inset focus-visible:before:ring-2 focus-visible:before:ring-primary',
                   'px-2.5 py-1.5 gap-1.5 transition-colors before:transition-colors',
-                  pendingCategoryIdSet.has(item.value)
+                  isCategoryItemSelected(item)
                     ? 'before:bg-elevated text-primary'
                     : 'hover:text-highlighted hover:before:bg-elevated/50'
                 ]"
@@ -165,7 +183,7 @@ watch(categoryPickerOpen, (open) => {
                 >
                   <button
                     type="button"
-                    class="inline-flex items-center justify-center text-(--ui-text-toned) hover:text-highlighted"
+                    class="inline-flex items-center justify-center text-toned hover:text-highlighted"
                     @click.stop="toggleCategoryTreeNode(handleToggle)"
                   >
                     <UIcon
@@ -181,7 +199,7 @@ watch(categoryPickerOpen, (open) => {
             </template>
           </UTree>
         </div>
-        <div class="flex justify-end gap-2 border-t border-(--ui-border) pt-2">
+        <div class="flex justify-end gap-2 border-t border-default pt-2">
           <UButton
             color="neutral"
             variant="ghost"
