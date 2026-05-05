@@ -578,17 +578,27 @@ async function confirmDeleteTerm() {
     </div>
 
     <div class="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-      <UCard :ui="{ body: 'p-2 sm:p-2' }">
+      <UCard :ui="{ body: 'p-4 sm:p-6' }">
         <template #header>
           <div class="text-sm font-semibold">
             {{ t('admin.categories_title') }}
           </div>
         </template>
 
-        <UEmpty
+        <div
           v-if="visibleCategoryCount === 0"
-          :title="t('admin.categories_empty')"
-        />
+          class="flex min-h-44 flex-col items-center justify-center rounded-xl border border-dashed border-default bg-elevated/20 px-6 py-10 text-center"
+        >
+          <div class="mb-3 flex size-10 items-center justify-center rounded-full bg-elevated text-muted ring-1 ring-default">
+            <UIcon
+              name="i-lucide-folder-plus"
+              class="size-5"
+            />
+          </div>
+          <p class="text-sm font-medium text-highlighted">
+            {{ t('admin.categories_empty') }}
+          </p>
+        </div>
 
         <UTree
           v-else
@@ -638,18 +648,30 @@ async function confirmDeleteTerm() {
         </UTree>
       </UCard>
 
-      <UCard>
+      <UCard :ui="{ body: 'p-4 sm:p-6' }">
         <template #header>
           <div class="text-sm font-semibold">
             {{ t('admin.categories_actions_title') }}
           </div>
         </template>
 
-        <UEmpty
+        <div
           v-if="!selectedCategory"
-          :title="t('admin.categories_empty_selection_title')"
-          :description="t('admin.categories_empty_selection_description')"
-        />
+          class="flex min-h-44 flex-col items-center justify-center rounded-xl border border-dashed border-default bg-elevated/20 px-6 py-10 text-center"
+        >
+          <div class="mb-3 flex size-10 items-center justify-center rounded-full bg-elevated text-muted ring-1 ring-default">
+            <UIcon
+              name="i-lucide-mouse-pointer-2"
+              class="size-5"
+            />
+          </div>
+          <p class="text-sm font-medium text-highlighted">
+            {{ t('admin.categories_empty_selection_title') }}
+          </p>
+          <p class="mt-1 text-sm text-muted">
+            {{ t('admin.categories_empty_selection_description') }}
+          </p>
+        </div>
 
         <div
           v-else
