@@ -135,7 +135,7 @@ const year = new Date().getFullYear()
             />
           </UDropdownMenu>
           <UColorModeButton />
-          <div class="w-px h-4 bg-(--ui-border)" />
+          <div class="w-px h-4 bg-border" />
           <UDropdownMenu
             :items="userMenuItems"
             :content="{ align: 'end', sideOffset: 8 }"
@@ -160,10 +160,10 @@ const year = new Date().getFullYear()
                   size="md"
                 />
                 <div class="truncate">
-                  <p class="font-medium text-(--ui-text-highlighted) truncate">
+                  <p class="font-medium text-highlighted truncate">
                     {{ me?.user?.username || t('auth.guest') }}
                   </p>
-                  <p class="text-xs text-(--ui-text-muted) truncate">
+                  <p class="text-xs text-muted truncate">
                     {{ me?.user ? currentRoleLabel : t('auth.guest') }}
                   </p>
                 </div>
@@ -178,9 +178,7 @@ const year = new Date().getFullYear()
       <slot />
     </UMain>
 
-    <USeparator icon="i-simple-icons-nuxtdotjs" />
-
-    <UFooter>
+    <UFooter class="border-t border-default">
       <template #left>
         <p class="text-sm text-muted">{{ t('layout.footer', { year }) }}</p>
       </template>
@@ -193,7 +191,7 @@ const year = new Date().getFullYear()
       <template #content>
         <div class="p-6">
           <div class="flex items-start gap-4">
-            <div class="flex-shrink-0 w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
+            <div class="shrink-0 w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
               <UIcon
                 name="i-lucide-triangle-alert"
                 class="w-6 h-6 text-red-500"
