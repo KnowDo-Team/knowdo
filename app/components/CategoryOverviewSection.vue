@@ -172,7 +172,29 @@ function getCompactTreeDepthClass(item: TreeItem) {
           :class="props.compact ? 'category-tree-surface-compact' : ''"
         >
           <div class="category-tree-surface-inner">
+            <div
+              v-if="!treeItems.length"
+              :class="[
+                'flex min-h-44 flex-col items-center justify-center px-6 py-10 text-center',
+                props.compact ? '' : 'rounded-xl border border-dashed border-default bg-elevated/20'
+              ]"
+            >
+              <div class="mb-3 flex size-10 items-center justify-center rounded-full bg-elevated text-muted ring-1 ring-default">
+                <UIcon
+                  name="i-lucide-folder-plus"
+                  class="size-5"
+                />
+              </div>
+              <p class="text-sm font-medium text-highlighted">
+                {{ t('wiki.categories_empty') }}
+              </p>
+              <p class="mt-1 text-sm text-muted">
+                {{ t('wiki.categories_empty_description') }}
+              </p>
+            </div>
+
             <UTree
+              v-else
               :expanded="expandedTreeKeys"
               :items="treeItems"
               :get-key="item => String(item.value)"

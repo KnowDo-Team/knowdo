@@ -12,6 +12,8 @@
   "wiki": {
     "categories_intro": "Browse the category hierarchy.",
     "categories_load_failed": "Failed to load categories",
+    "categories_empty": "No categories yet.",
+    "categories_empty_description": "Categories will appear here once an administrator publishes them.",
     "category_not_found": "Category not found",
     "subcategories_heading": "Subcategories",
     "articles_heading": "Articles",

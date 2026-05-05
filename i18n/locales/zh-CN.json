@@ -12,6 +12,8 @@
   "wiki": {
     "categories_intro": "按树形层级浏览全部分类。",
     "categories_load_failed": "分类加载失败",
+    "categories_empty": "暂无分类。",
+    "categories_empty_description": "管理员发布分类后会显示在这里。",
     "category_not_found": "未找到该分类",
     "subcategories_heading": "子分类",
     "articles_heading": "文章",
