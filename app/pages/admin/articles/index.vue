@@ -97,6 +97,7 @@ async function deleteArticle(article: ArticleRow) {
       :columns="columns"
       :loading="status === 'pending'"
       :get-row-id="(row: ArticleRow) => row.id"
+      :ui="{ empty: 'p-4 sm:p-6' }"
       class="rounded-xl border border-default bg-default overflow-hidden"
     >
       <template #loading>
@@ -171,16 +172,14 @@ async function deleteArticle(article: ArticleRow) {
       </template>
 
       <template #empty>
-        <div class="text-center py-24">
-          <div
-            class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 bg-elevated ring-1 ring-default"
-          >
+        <div class="flex min-h-44 flex-col items-center justify-center rounded-xl border border-dashed border-default bg-elevated/20 px-6 py-10 text-center">
+          <div class="mb-3 flex size-10 items-center justify-center rounded-full bg-elevated text-muted ring-1 ring-default">
             <UIcon
               name="i-lucide-file-text"
-              class="w-10 h-10 text-muted"
+              class="size-5"
             />
           </div>
-          <p class="text-muted font-medium">
+          <p class="text-sm font-medium text-highlighted">
             {{ t('admin.articles_empty') }}
           </p>
         </div>
