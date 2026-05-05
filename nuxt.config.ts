@@ -6,6 +6,43 @@ export default defineNuxtConfig({
     '@nuxtjs/i18n'
   ],
 
+  $development: {
+    sourcemap: {
+      server: true,
+      client: true
+    }
+  },
+
+  $production: {
+    sourcemap: {
+      server: false,
+      client: false
+    },
+    nitro: {
+      externals: {
+        inline: [
+          /^(?!.*(mysql2|@libsql[\\/+]client|(?:^|[\\/+])pg(?:@|[\\/]|$)))/
+        ]
+      },
+      rollupConfig: {
+        external: [
+          'mysql2',
+          'mysql2/promise',
+          '@libsql/client',
+          'pg'
+        ]
+      }
+    }
+  },
+
+  devtools: {
+    enabled: true
+  },
+
+  css: ['~/assets/css/main.css'],
+
+  compatibilityDate: '2025-01-15',
+
   vite: {
     optimizeDeps: {
       include: [
@@ -24,6 +61,15 @@ export default defineNuxtConfig({
     }
   },
 
+  eslint: {
+    config: {
+      stylistic: {
+        commaDangle: 'never',
+        braceStyle: '1tbs'
+      }
+    }
+  },
+
   i18n: {
     defaultLocale: 'en-US',
     strategy: 'no_prefix',
@@ -38,27 +84,6 @@ export default defineNuxtConfig({
     },
     compilation: {
       strictMessage: false
-    }
-  },
-
-  devtools: {
-    enabled: true
-  },
-
-  css: ['~/assets/css/main.css'],
-
-  routeRules: {
-    '/': { prerender: true }
-  },
-
-  compatibilityDate: '2025-01-15',
-
-  eslint: {
-    config: {
-      stylistic: {
-        commaDangle: 'never',
-        braceStyle: '1tbs'
-      }
     }
   }
 })

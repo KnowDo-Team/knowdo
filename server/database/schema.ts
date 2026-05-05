@@ -1,57 +1,84 @@
-import { sqliteTable, text, primaryKey } from 'drizzle-orm/sqlite-core'
+import { mysqlTable, primaryKey as mysqlPrimaryKey, text as mysqlText, varchar as mysqlVarchar } from 'drizzle-orm/mysql-core'
+import { pgTable, primaryKey as pgPrimaryKey, text as pgText, varchar as pgVarchar } from 'drizzle-orm/pg-core'
+import { sqliteTable, primaryKey as sqlitePrimaryKey, text as sqliteText } from 'drizzle-orm/sqlite-core'
 
-export const users = sqliteTable('users', {
-  id: text('id').primaryKey(),
-  username: text('username').notNull().unique(),
-  role: text('role').notNull().default('editor'),
-  passwordHash: text('password_hash').notNull(),
-  createdAt: text('created_at').notNull()
+const dbType = process.env.DB_TYPE || 'sqlite'
+const isMysql = dbType === 'mysql'
+const isPostgres = ['pgsql', 'postgres', 'postgresql'].includes(dbType)
+
+// --- Dialect Helpers ---
+
+// Table Builder
+export const table = (isMysql ? mysqlTable : isPostgres ? pgTable : sqliteTable) as any
+
+// Primary Key Builder
+export const primaryKey = (isMysql ? mysqlPrimaryKey : isPostgres ? pgPrimaryKey : sqlitePrimaryKey) as any
+
+// Common Columns
+export const textCol = (name: string, length: number = 255): any => {
+  if (isMysql) return mysqlVarchar(name, { length })
+  if (isPostgres) return pgVarchar(name, { length })
+  return sqliteText(name)
+}
+
+export const longTextCol = (name: string): any => {
+  if (isMysql) return mysqlText(name)
+  if (isPostgres) return pgText(name)
+  return sqliteText(name)
+}
+
+export const users = table('users', {
+  id: textCol('id').primaryKey(),
+  username: textCol('username').notNull().unique(),
+  role: textCol('role', 32).notNull().default('editor'),
+  passwordHash: textCol('password_hash').notNull(),
+  createdAt: textCol('created_at').notNull()
 })
 
-export const sessions = sqliteTable('sessions', {
-  id: text('id').primaryKey(),
-  userId: text('user_id')
+export const sessions = table('sessions', {
+  id: textCol('id').primaryKey(),
+  userId: textCol('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
-  tokenHash: text('token_hash').notNull().unique(),
-  createdAt: text('created_at').notNull(),
-  expiresAt: text('expires_at').notNull()
+  tokenHash: textCol('token_hash').notNull().unique(),
+  createdAt: textCol('created_at').notNull(),
+  expiresAt: textCol('expires_at').notNull()
 })
 
-export const terms = sqliteTable('terms', {
-  id: text('id').primaryKey(),
-  parentId: text('parent_id'),
-  slug: text('slug').notNull(),
-  name: text('name').notNull(),
-  createdAt: text('created_at').notNull()
+export const terms = table('terms', {
+  id: textCol('id').primaryKey(),
+  parentId: textCol('parent_id'),
+  slug: textCol('slug').notNull(),
+  name: textCol('name').notNull(),
+  createdAt: textCol('created_at').notNull()
 })
 
-export const articles = sqliteTable('articles', {
-  id: text('id').primaryKey(),
-  slug: text('slug').notNull().unique(),
-  title: text('title').notNull(),
+export const articles = table('articles', {
+  id: textCol('id').primaryKey(),
+  slug: textCol('slug').notNull().unique(),
+  title: textCol('title').notNull(),
   /** TipTap / UEditor JSON (stored as text) */
-  content: text('content').notNull(),
-  visibility: text('visibility').notNull().default('public'),
-  status: text('status').notNull().default('draft'),
-  authorId: text('author_id')
+  content: longTextCol('content').notNull(),
+  visibility: textCol('visibility', 32).notNull().default('public'),
+  status: textCol('status', 32).notNull().default('draft'),
+  authorId: textCol('author_id')
     .notNull()
     .references(() => users.id),
-  createdAt: text('created_at').notNull(),
-  updatedAt: text('updated_at').notNull()
+  createdAt: textCol('created_at').notNull(),
+  updatedAt: textCol('updated_at').notNull()
 })
 
-export const articleTerms = sqliteTable(
+export const articleTerms = table(
   'article_terms',
   {
-    articleId: text('article_id')
+    articleId: textCol('article_id')
       .notNull()
       .references(() => articles.id, { onDelete: 'cascade' }),
-    termId: text('term_id')
+    termId: textCol('term_id')
       .notNull()
       .references(() => terms.id, { onDelete: 'cascade' })
   },
-  (t) => ({
+  (t: any) => ({
     pk: primaryKey({ columns: [t.articleId, t.termId] })
   })
 )

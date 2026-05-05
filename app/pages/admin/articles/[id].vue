@@ -17,7 +17,20 @@ const status = ref<'draft' | 'published'>('draft')
 const termIds = ref<string[]>([])
 const content = ref<Record<string, unknown>>({ type: 'doc', content: [] })
 
-const { data, refresh, status: loadStatus } = await useFetch(
+type ArticleResponse = {
+  article: {
+    id: string
+    slug: string
+    title: string
+    content: string | Record<string, unknown>
+    visibility: string
+    status: string
+    termIds: string[]
+    updatedAt: string
+  }
+}
+
+const { data, refresh, status: loadStatus } = await useFetch<ArticleResponse>(
   () => `/api/admin/articles/${id.value}`,
   { lazy: true, watch: [id] }
 )

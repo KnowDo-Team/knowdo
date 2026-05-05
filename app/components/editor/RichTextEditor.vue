@@ -26,11 +26,11 @@ const editorExtensions = [
   Color,
   BackgroundColor,
   FontFamily
-] as const
+]
 
-const value = computed({
-  get: () => props.modelValue,
-  set: (val) => emit('update:modelValue', val)
+const value = computed<string | object>({
+  get: () => props.modelValue ?? { type: 'doc', content: [] },
+  set: val => emit('update:modelValue', val)
 })
 
 const customHandlers: EditorCustomHandlers = {
@@ -222,7 +222,11 @@ const suggestionItems = computed<EditorSuggestionMenuItem[][]>(() => [
           class="border-b border-(--ui-border) px-4 sm:px-8 py-2 bg-neutral-50 dark:bg-neutral-950 overflow-x-auto whitespace-nowrap scrollbar-hide rounded-t-lg shrink-0"
         />
 
-        <UEditorSuggestionMenu :editor="editor" :items="suggestionItems" :append-to="appendToBody" />
+        <UEditorSuggestionMenu
+          :editor="editor"
+          :items="suggestionItems"
+          :append-to="appendToBody"
+        />
       </UEditor>
     </div>
 
@@ -230,7 +234,10 @@ const suggestionItems = computed<EditorSuggestionMenuItem[][]>(() => [
       <div
         class="min-h-[280px] rounded-lg border border-(--ui-border) bg-(--ui-bg-elevated)/40 flex flex-col items-center justify-center gap-3 text-sm text-(--ui-text-muted)"
       >
-        <UIcon name="i-lucide-loader-circle" class="size-8 animate-spin" />
+        <UIcon
+          name="i-lucide-loader-circle"
+          class="size-8 animate-spin"
+        />
         {{ t('common.loading') }}
       </div>
     </template>

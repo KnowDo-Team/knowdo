@@ -3,13 +3,21 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "nuxt build",
-    "dev": "cross-env NODE_OPTIONS=--max-old-space-size=16384 nuxt dev",
+    "build": "cross-env NODE_OPTIONS=--max-old-space-size=16384 NODE_ENV=production nuxt build",
+    "bundle": "node scripts/bundle.mjs",
+    "dev": "cross-env NODE_OPTIONS=--max-old-space-size=16384 NODE_ENV=development nuxt dev",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
     "typecheck": "nuxt typecheck",
-    "db:push": "drizzle-kit push"
+    "db:migrate": "drizzle-kit migrate",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:pull": "drizzle-kit pull",
+    "db:check": "drizzle-kit check",
+    "db:up": "drizzle-kit up",
+    "db:export": "drizzle-kit export"
   },
   "dependencies": {
     "@iconify-json/lucide": "^1.2.105",
@@ -29,7 +37,9 @@
     "busboy": "^1.6.0",
     "drizzle-orm": "^0.45.2",
     "isomorphic-dompurify": "^3.11.0",
+    "mysql2": "^3.22.3",
     "nuxt": "^4.4.4",
+    "pg": "^8.20.0",
     "tailwindcss": "^4.2.4",
     "zod": "^4.4.1"
   },
@@ -37,6 +47,8 @@
     "@nuxt/eslint": "^1.15.2",
     "@tailwindcss/typography": "^0.5.19",
     "@types/busboy": "^1.5.4",
+    "@types/pg": "^8.20.0",
+    "archiver": "^7.0.1",
     "cross-env": "^10.1.0",
     "drizzle-kit": "^0.31.10",
     "eslint": "^10.2.1",
