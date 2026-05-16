@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import archiver from 'archiver'
+import { ZipArchive } from 'archiver'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -18,7 +18,7 @@ async function bundle() {
   }
 
   const output = fs.createWriteStream(outputPath)
-  const archive = archiver('zip', {
+  const archive = new ZipArchive({
     zlib: { level: 9 } // Sets the compression level.
   })
 
