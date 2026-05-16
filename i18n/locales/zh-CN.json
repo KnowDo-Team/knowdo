@@ -121,7 +121,11 @@
     "password": "密码",
     "sign_in": "登录",
     "failed": "登录失败",
-    "invalid_credentials": "用户名或密码错误"
+    "invalid_credentials": "用户名或密码错误",
+    "captcha_required": "请先完成验证码。",
+    "captcha_failed": "验证码校验失败，请重试。",
+    "captcha_unavailable": "验证码暂时不可用，请稍后重试。",
+    "captcha_config_error": "验证码配置不完整，请联系管理员。"
   },
   "setup": {
     "title": "首次设置",

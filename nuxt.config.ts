@@ -41,6 +41,17 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
+  runtimeConfig: {
+    public: {
+      aliyunCaptcha: {
+        enabled: false,
+        region: 'cn',
+        prefix: '',
+        loginSceneId: ''
+      }
+    }
+  },
+
   compatibilityDate: '2025-01-15',
 
   vite: {

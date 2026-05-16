@@ -121,7 +121,11 @@
     "password": "Password",
     "sign_in": "Sign in",
     "failed": "Login failed",
-    "invalid_credentials": "Invalid credentials"
+    "invalid_credentials": "Invalid credentials",
+    "captcha_required": "Please complete the CAPTCHA first.",
+    "captcha_failed": "CAPTCHA verification failed. Please try again.",
+    "captcha_unavailable": "CAPTCHA is temporarily unavailable. Please try again later.",
+    "captcha_config_error": "CAPTCHA is not fully configured. Please contact an administrator."
   },
   "setup": {
     "title": "Initial setup",
