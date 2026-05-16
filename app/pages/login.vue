@@ -27,6 +27,11 @@ function getResponseHeader(error: unknown, name: string) {
   return e.response?.headers?.get?.(name) || null
 }
 
+function translateLoginErrorMessage(message: string) {
+  if (message === 'Invalid username or password') return t('login.invalid_credentials')
+  return message
+}
+
 function getLoginErrorMessage(error: unknown) {
   const verifyCode = getResponseHeader(error, 'x-captcha-verify-code')
   if (verifyCode && verifyCode !== 'T001') return t('login.captcha_failed')
@@ -36,8 +41,10 @@ function getLoginErrorMessage(error: unknown) {
       data?: { statusMessage?: unknown }
       message?: unknown
     }
-    if (typeof e.data?.statusMessage === 'string' && e.data.statusMessage) return e.data.statusMessage
-    if (typeof e.message === 'string' && e.message) return e.message
+    if (typeof e.data?.statusMessage === 'string' && e.data.statusMessage) {
+      return translateLoginErrorMessage(e.data.statusMessage)
+    }
+    if (typeof e.message === 'string' && e.message) return translateLoginErrorMessage(e.message)
   }
 
   return t('login.invalid_credentials')
